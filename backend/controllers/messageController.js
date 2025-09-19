@@ -1,0 +1,36 @@
+import Chat from "../models/Chat.js";
+import User from "../models/User.js";
+
+
+//Text-based AI Chat Message Controller
+export const textMessageController = async (req, res)=>{
+    try {
+        if(req.user.credits < 1){
+            return res.json({success: false, message: "You don't have enough credits to use this feature"});
+        }
+        const userId = req.user._id;
+        const {chatId, prompt} = req.body;
+        const chat = await Chat.findById({chatId});
+        chat.messages.push({role: "user", content: prompt, timestamp: Date.now(), isImage: false});
+        const { choices } = await openai.chat.completions.create({
+            model: "gemini-2.0-flash",
+            messages: [
+                {
+                    role: "user",
+                    content: prompt
+                },
+            ],
+        });
+
+        const reply = {...choices[0],timestamp: Date.now(),isImage: false};
+        res.json({success: true, reply});
+
+        chat.messages.push(reply);
+        await chat.save();
+        await User.findByIdAndUpdate({_id: userId}, {$inc:{credits:-1}});
+
+    }
+    catch (error){
+        res.json({success: false, message: error.message});
+    }
+}
