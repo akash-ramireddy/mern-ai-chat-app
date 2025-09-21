@@ -46,7 +46,7 @@ export const purchasePlan = async (req, res) => {
         const userId = req.user._id;
         const plan = plans.find(plan => planId==plan._id);
         if(!plan){
-            res.json({sucess: false, message: "Invalid plan"});
+            return res.json({sucess: false, message: "Invalid plan"});
         }
 
         //Create new Transaction
@@ -65,7 +65,7 @@ export const purchasePlan = async (req, res) => {
                 {
                     price_data: {
                         currency: "aud",
-                        unit_amount: plan.price * 10,
+                        unit_amount: plan.price * 100,
                         product_data: {
                             name: plan.name
                         }
