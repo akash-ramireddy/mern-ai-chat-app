@@ -4,7 +4,8 @@ import cors from 'cors';
 import connectDB from './configs/db.js';
 import userRouter from './routes/userRoutes.js';
 import chatRouter from './routes/chatRouter.js';
-import { protect } from './middlewares/auth.js';
+import messageRouter from './routes/messageRouter.js';
+import creditRouter from './routes/creditsRouter.js';
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(express.json());
 app.get('/', (req, res)=> res.send('Server is Live!'));
 app.use('/api/user', userRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/message', messageRouter);
+app.use('/api/credit', creditRouter)
 
 const PORT = process.env.PORT || 3000;
 

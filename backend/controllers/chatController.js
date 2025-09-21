@@ -24,9 +24,8 @@ export const createChat = async (req, res) =>{
 export const getChats = async (req, res) =>{
     try {
         const userId = req.user._id;
-        const chats = Chat.find({userId}).sort({updatedAt: -1})
+        const chats = await Chat.find({userId}).sort({updatedAt: -1});
 
-        await Chat.create(chatData);
         res.json({sucess: true, chats});
     }
     catch (error) {
