@@ -1,23 +1,24 @@
-import Chat from "../models/Chat.js";
-import User from "../models/User.js";
-import openai from "../configs/openai.js";
-import imagekit from "../configs/imagekit.js";
-import axios from "axios";
+import axios from "axios"
+import Chat from "../models/Chat.js"
+import User from "../models/User.js"
+import imagekit from "../configs/imageKit.js"
+import openai from '../configs/openai.js'
+
 
 // Text-based AI Chat Message Controller
 export const textMessageController = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user._id
 
          // Check credits
         if(req.user.credits < 1){
-            return res.json({success: false, message: "You don't have enough credits to use this feature"});
+            return res.json({success: false, message: "You don't have enough credits to use this feature"})
         }
 
-        const {chatId, prompt} = req.body;
+        const {chatId, prompt} = req.body
 
-        const chat = await Chat.findOne({userId, _id: chatId});
-        chat.messages.push({role: "user", content: prompt, timestamp: Date.now(), isImage: false});
+        const chat = await Chat.findOne({userId, _id: chatId})
+        chat.messages.push({role: "user", content: prompt, timestamp: Date.now(), isImage: false})
 
         const { choices } = await openai.chat.completions.create({
         model: "gemini-2.0-flash",
@@ -41,21 +42,27 @@ export const textMessageController = async (req, res) => {
     }
 }
 
+// Image Generation Message Controller
 export const imageMessageController = async (req, res) => {
-    try{
+    try {
         const userId = req.user._id;
-
-        if(req.user.credits<2){
-            return res.json({success: false, message: "You don't have enough credits to use this feature"});
+        // Check credits
+        if(req.user.credits < 2){
+            return res.json({success: false, message: "You don't have enough credits to use this feature"})
         }
-        const { chatId, prompt, isPublished } = req.body;
-        const chat = await Chat.findById(chatId);
+        const {prompt, chatId, isPublished} = req.body
+        // Find chat
+        const chat = await Chat.findOne({userId, _id: chatId})
 
-        //Push user message
-        chat.messages.push({role:"user", content:prompt, isImage: true, timestamp: Date.now(), isPublished});
-        
-        //Encode the prompt
-        const encodedPrompt = encodeURIComponent(prompt);
+         // Push user message
+         chat.messages.push({
+            role: "user", 
+            content: prompt, 
+            timestamp: Date.now(), 
+            isImage: false});
+
+        // Encode the prompt
+        const encodedPrompt = encodeURIComponent(prompt)
 
         // Construct ImageKit AI generation URL
         const generatedImageUrl = `${process.env.IMAGEKIT_URL_ENDPOINT}/ik-genimg-prompt-${encodedPrompt}/quickgpt/${Date.now()}.png?tr=w-800,h-800`;
@@ -74,46 +81,21 @@ export const imageMessageController = async (req, res) => {
         })
 
         const reply = {
-            role: 'assistant',
-            content: uploadResponse.url,
-            timestamp: Date.now(),
-            isImage: true,
-            isPublished
+                role: 'assistant',
+                content: uploadResponse.url,
+                timestamp: Date.now(), 
+                isImage: true,
+                isPublished
         }
 
-        res.json({success: true, reply});
-        
-        chat.messages.push(reply);
-        await chat.save();
+         res.json({success: true, reply})
 
-        await User.updateOne({_id: userId}, {$inc: {credits: -2}});
-    }
-    catch (error){
-        res.json({success: false, message: error.message});
-    }
-}
+         chat.messages.push(reply)
+         await chat.save()
 
-//API to get published images
-export const getPublishedImages = async (req, res) => {
-    try {
-        const publishedImages = await Chat.aggregate([
-            {$unwind: "$messages"},
-            {
-                $match: {
-                    "message.isImage": true,
-                    "message.isPublished": true
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    imageUrl: "$messages.content",
-                }
-            }
-        ]);
-        res.json({success: true, images: publishedImages.reverse()});
-    }
-    catch(error) {
-        res.json({success: false, message: error.message});
+          await User.updateOne({_id: userId}, {$inc: {credits: -2}})
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 }
