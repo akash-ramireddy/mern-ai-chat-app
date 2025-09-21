@@ -7,6 +7,7 @@ import chatRouter from './routes/chatRouter.js';
 import messageRouter from './routes/messageRouter.js';
 import creditRouter from './routes/creditsRouter.js';
 import { stripeWebhooks } from './controllers/webhooks.js';
+import serverless from 'serverless-http';
 
 const app = express();
 
@@ -31,3 +32,5 @@ const PORT = process.env.PORT || 3000;
 // app.listen(PORT, ()=>{
 //     console.log(`Server is running on port ${PORT}`);
 // })
+
+export const handler = serverless(app);
