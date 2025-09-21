@@ -33,4 +33,4 @@ const PORT = process.env.PORT || 3000;
 //     console.log(`Server is running on port ${PORT}`);
 // })
 
-export const handler = serverless(app);
+export default serverless(app);
